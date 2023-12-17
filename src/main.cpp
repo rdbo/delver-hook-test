@@ -5,6 +5,7 @@
 JavaVM *jvm;
 jclass PlayerClass;
 jmethodID AttackMethod;
+jmethodID takeDamageMethod;
 
 jvalue hkPlayerAttack(jvalue *args, size_t nargs, void *thread, void *arg)
 {
@@ -28,6 +29,22 @@ jvalue hkPlayerAttack(jvalue *args, size_t nargs, void *thread, void *arg)
 	return jvalue { 0 };
 }
 
+
+jvalue hkTakeDamage(jvalue *args, size_t nargs, void *thread, void *arg)
+{
+	JNIEnv *jni;
+	
+	std::cout << "[DH] hkTakeDamage called!" << std::endl;
+	std::cout << "[DH] Number of args: " << nargs << std::endl;
+	std::cout << "[DH] Args: " << std::endl;
+	std::cout << "[DH]  - thisptr: " << (void *)(args[0].l) << std::endl;
+	std::cout << "[DH]  - damage: " << args[1].i << std::endl;
+	std::cout << "[DH]  - damageType: " << (void *)(args[2].l) << std::endl;
+	std::cout << "[DH]  - instigator: " << (void *)(args[3].l) << std::endl;
+
+	return jvalue { 0 };
+}
+
 static void setup(JNIEnv *jni)
 {
 	PlayerClass = jni->FindClass("com/interrupt/dungeoneer/entities/Player");
@@ -40,8 +57,12 @@ static void setup(JNIEnv *jni)
 	AttackMethod = jni->GetMethodID(PlayerClass, "Attack", "(Lcom/interrupt/dungeoneer/game/Level;)V");
 	std::cout << "[DH] Attack method: " << AttackMethod << std::endl;
 
+	takeDamageMethod = jni->GetMethodID(PlayerClass, "takeDamage", "(ILcom/interrupt/dungeoneer/entities/items/Weapon$DamageType;Lcom/interrupt/dungeoneer/entities/Entity;)I");
+	std::cout << "[DH] takeDamage method: " << takeDamageMethod << std::endl;
+
 	JNIHook_Init(jvm);
-	JNIHook_Attach(AttackMethod, hkPlayerAttack, NULL);
+	// JNIHook_Attach(AttackMethod, hkPlayerAttack, NULL);
+	JNIHook_Attach(takeDamageMethod, hkTakeDamage, NULL);
 
 	std::cout << "[DH] Delver Hook set up successfully" << std::endl;
 }

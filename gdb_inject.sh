@@ -14,9 +14,18 @@ if [ ! -f $LIB_PATH ]; then
 	exit -1
 fi
 
-gdb -n -q -batch \
-	-ex "attach $(pgrep -f "$GAME_CMDLINE")" \
-	-ex "set \$dlopen = (void *(*)(char *, int))dlopen" \
-	-ex "call \$dlopen(\"$LIB_PATH\", $LOAD_MODE)" \
-	-ex "detach" \
-	-ex "quit"
+if [ "$1" != "-d" ]; then
+	echo "[INJECT MODE]"
+	gdb -n -q -batch \
+		-ex "attach $(pgrep -f "$GAME_CMDLINE")" \
+		-ex "set \$dlopen = (void *(*)(char *, int))dlopen" \
+		-ex "call \$dlopen(\"$LIB_PATH\", $LOAD_MODE)" \
+		-ex "detach" \
+		-ex "quit"
+else
+	echo "[DEBUG MODE]"
+	gdb -n -q \
+		-ex "attach $(pgrep -f "$GAME_CMDLINE")" \
+		-ex "set \$dlopen = (void *(*)(char *, int))dlopen" \
+		-ex "call \$dlopen(\"$LIB_PATH\", $LOAD_MODE)"
+fi
