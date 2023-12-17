@@ -4,6 +4,29 @@
 
 JavaVM *jvm;
 jclass PlayerClass;
+jmethodID AttackMethod;
+
+jvalue hkPlayerAttack(jvalue *args, size_t nargs, void *thread, void *arg)
+{
+	JNIEnv *jni;
+	
+	std::cout << "[DH] hkPlayerAttack called!" << std::endl;
+	std::cout << "[DH] Number of args: " << nargs << std::endl;
+	std::cout << "[DH] Args: " << std::endl;
+	std::cout << "[DH]  - thisptr: " << (void *)(args[0].l) << std::endl;
+	std::cout << "[DH]  - level: " << (void *)(args[1].l) << std::endl;
+
+	jvm->GetEnv((void **)&jni, JNI_VERSION_1_6);
+	std::cout << "[DH] JNI: " << jni << std::endl;
+
+	std::cout << "[DH] Calling original Player::Attack..." << std::endl;
+
+	jni->CallVoidMethod((jobject)&args[0].l, AttackMethod, (jobject)&args[1].l);
+
+	std::cout << "[DH] Called original Player::Attack" << std::endl;
+	
+	return jvalue { 0 };
+}
 
 static void setup(JNIEnv *jni)
 {
@@ -14,7 +37,11 @@ static void setup(JNIEnv *jni)
 	}
 	std::cout << "[DH] Player class: " << PlayerClass << std::endl;
 
+	AttackMethod = jni->GetMethodID(PlayerClass, "Attack", "(Lcom/interrupt/dungeoneer/game/Level;)V");
+	std::cout << "[DH] Attack method: " << AttackMethod << std::endl;
+
 	JNIHook_Init(jvm);
+	JNIHook_Attach(AttackMethod, hkPlayerAttack, NULL);
 
 	std::cout << "[DH] Delver Hook set up successfully" << std::endl;
 }
@@ -22,8 +49,6 @@ static void setup(JNIEnv *jni)
 static void *main_thread(void *arg)
 {
 	JNIEnv *jni;
-
-	std::system("zenity --info");
 
 	freopen("/tmp/delverhook.log", "w", stdout);
 
