@@ -1,4 +1,4 @@
-FROM debian:oldoldstable
+FROM debian:testing
 
 WORKDIR /app
 
