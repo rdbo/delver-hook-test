@@ -6,6 +6,7 @@ JavaVM *jvm;
 jclass PlayerClass;
 jmethodID AttackMethod;
 jmethodID takeDamageMethod;
+jmethodID getWalkSpeedMethod;
 
 jvalue hkPlayerAttack(jvalue *args, size_t nargs, void *thread, void *arg)
 {
@@ -32,8 +33,6 @@ jvalue hkPlayerAttack(jvalue *args, size_t nargs, void *thread, void *arg)
 
 jvalue hkTakeDamage(jvalue *args, size_t nargs, void *thread, void *arg)
 {
-	JNIEnv *jni;
-	
 	std::cout << "[DH] hkTakeDamage called!" << std::endl;
 	std::cout << "[DH] Number of args: " << nargs << std::endl;
 	std::cout << "[DH] Args: " << std::endl;
@@ -43,6 +42,16 @@ jvalue hkTakeDamage(jvalue *args, size_t nargs, void *thread, void *arg)
 	std::cout << "[DH]  - instigator: " << (void *)(args[3].l) << std::endl;
 
 	return jvalue { 0 };
+}
+
+jvalue hkGetWalkSpeed(jvalue *args, size_t nargs, void *thread, void *arg)
+{
+	std::cout << "[DH] hkGetWalkSpeed called!" << std::endl;
+	std::cout << "[DH] Number of args: " << nargs << std::endl;
+	std::cout << "[DH] Args: " << std::endl;
+	std::cout << "[DH]  - thisptr: " << (void *)(args[0].l) << std::endl;
+
+	return jvalue { .f = 2.0f };
 }
 
 static void setup(JNIEnv *jni)
@@ -60,9 +69,13 @@ static void setup(JNIEnv *jni)
 	takeDamageMethod = jni->GetMethodID(PlayerClass, "takeDamage", "(ILcom/interrupt/dungeoneer/entities/items/Weapon$DamageType;Lcom/interrupt/dungeoneer/entities/Entity;)I");
 	std::cout << "[DH] takeDamage method: " << takeDamageMethod << std::endl;
 
+	getWalkSpeedMethod = jni->GetMethodID(PlayerClass, "getWalkSpeed", "()F");
+	std::cout << "[DH] getWalkSpeed method: " << getWalkSpeedMethod << std::endl;
+
 	JNIHook_Init(jvm);
 	// JNIHook_Attach(AttackMethod, hkPlayerAttack, NULL);
 	JNIHook_Attach(takeDamageMethod, hkTakeDamage, NULL);
+	JNIHook_Attach(getWalkSpeedMethod, hkGetWalkSpeed, NULL);
 
 	std::cout << "[DH] Delver Hook set up successfully" << std::endl;
 }
