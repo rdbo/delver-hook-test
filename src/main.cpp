@@ -73,9 +73,9 @@ static void setup(JNIEnv *jni)
 	std::cout << "[DH] getWalkSpeed method: " << getWalkSpeedMethod << std::endl;
 
 	JNIHook_Init(jvm);
-	JNIHook_Attach(AttackMethod, hkPlayerAttack, NULL);
+	// JNIHook_Attach(AttackMethod, hkPlayerAttack, NULL);
 	JNIHook_Attach(takeDamageMethod, hkTakeDamage, NULL);
-	JNIHook_Attach(getWalkSpeedMethod, hkGetWalkSpeed, NULL);
+	// JNIHook_Attach(getWalkSpeedMethod, hkGetWalkSpeed, NULL);
 
 	std::cout << "[DH] Delver Hook set up successfully" << std::endl;
 }
