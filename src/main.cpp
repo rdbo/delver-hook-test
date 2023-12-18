@@ -49,7 +49,7 @@ jvalue hkGetWalkSpeed(JNIEnv *jni, jmethodID callableMethod, jvalue *args, size_
 	std::cout << "[DH] Args: " << std::endl;
 	std::cout << "[DH]  - thisptr: " << (void *)(args[0].l) << std::endl;
 
-	return jvalue { .f = 1.4f };
+	return jvalue { .f = 0.75f }; // Default speed is lower than this
 }
 
 jvalue hkGetAttackSpeedStatBoost(JNIEnv *jni, jmethodID callableMethod, jvalue *args, size_t nargs, void *arg)
