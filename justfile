@@ -1,16 +1,16 @@
 runasroot := 'doas'
 
-inject-glibc: build-debian-docker start_delver inject
+inject-glibc: build-docker start_delver inject
 
-build-debian-docker:
-	./docker-env.sh just build-debian
+build-docker:
+	./docker-env.sh just build-dev
 
-build:
-	mkdir -p build
-	cd build && cmake .. && make -j $(nproc)
+build-dev:
+	cmake -B build . -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+	cd build && make -j $(nproc)
 
 clean:
-	rm -rf build
+	rm -rf build*
 
 logs:
 	@echo "===== STDOUT ====="
