@@ -5,6 +5,9 @@ inject-glibc: build-docker start_delver inject
 build-docker:
 	./docker-env.sh just build-dev
 
+clean-docker:
+	./docker-env.sh just clean
+
 build-dev:
 	cmake -B build . -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 	cd build && make -j $(nproc)
