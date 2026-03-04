@@ -3,12 +3,12 @@ runasroot := 'doas'
 inject-glibc: build-docker start_delver inject
 
 build-docker:
-	./docker-env.sh just build-dev
+	./docker-env.sh just build
 
 clean-docker:
 	./docker-env.sh just clean
 
-build-dev:
+build:
 	cmake -B build . -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 	cd build && make -j $(nproc)
 
@@ -29,8 +29,8 @@ start_delver:
 	while ! just get_delver_pid >/dev/null 2>&1; do sleep 0.5; done
 
 inject:
-	{{runasroot}} cp "$(pwd)/libdelverhook.so" "/proc/$(pidof -s delver)/root/tmp/"
-	{{runasroot}} injector -n delver "/tmp/libdelverhook.so"
+	{{runasroot}} cp "$(pwd)/build/libdelverhook.so" "/proc/$(pidof -s steam)/root/tmp/"
+	{{runasroot}} injector -p $(just get_delver_pid) "/tmp/libdelverhook.so"
 
 get_delver_pid:
 	@jps | grep delver.jar | awk '{print $1; exit} END {exit NR==0}'

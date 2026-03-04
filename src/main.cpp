@@ -5,61 +5,58 @@
 JavaVM *jvm;
 jclass PlayerClass;
 jmethodID AttackMethod;
+jmethodID orig_AttackMethod;
 jmethodID takeDamageMethod;
+jmethodID orig_takeDamageMethod;
 jmethodID getWalkSpeedMethod;
+jmethodID orig_getWalkSpeedMethod;
 jmethodID getAttackSpeedStatBoostMethod;
+jmethodID orig_getAttackSpeedStatBoostMethod;
 
-jvalue hkPlayerAttack(JNIEnv *jni, jmethodID callableMethod, jvalue *args, size_t nargs, void *arg)
+void hkPlayerAttack(JNIEnv *jni, jobject obj, jobject level)
 {
 	std::cout << "[DH] hkPlayerAttack called!" << std::endl;
-	std::cout << "[DH] Number of args: " << nargs << std::endl;
 	std::cout << "[DH] Args: " << std::endl;
-	std::cout << "[DH]  - thisptr: " << (void *)(args[0].l) << std::endl;
-	std::cout << "[DH]  - level: " << (void *)(args[1].l) << std::endl;
+	std::cout << "[DH]  - thisptr: " << (void *)(obj) << std::endl;
+	std::cout << "[DH]  - level: " << (void *)(level) << std::endl;
 
 	std::cout << "[DH] JNI: " << jni << std::endl;
 
 	std::cout << "[DH] Calling original Player::Attack..." << std::endl;
 
-	jni->CallVoidMethod((jobject)&args[0].l, callableMethod, (jobject)&args[1].l);
+	jni->CallNonvirtualVoidMethod(obj, PlayerClass, orig_AttackMethod, level);
 
 	std::cout << "[DH] Called original Player::Attack" << std::endl;
-	
-	return jvalue { 0 };
 }
 
-
-jvalue hkTakeDamage(JNIEnv *jni, jmethodID callableMethod, jvalue *args, size_t nargs, void *arg)
+jint hkTakeDamage(JNIEnv *jni, jobject obj, jint damage, jobject damageType, jobject instigator)
 {
 	std::cout << "[DH] hkTakeDamage called!" << std::endl;
-	std::cout << "[DH] Number of args: " << nargs << std::endl;
 	std::cout << "[DH] Args: " << std::endl;
-	std::cout << "[DH]  - thisptr: " << (void *)(args[0].l) << std::endl;
-	std::cout << "[DH]  - damage: " << args[1].i << std::endl;
-	std::cout << "[DH]  - damageType: " << (void *)(args[2].l) << std::endl;
-	std::cout << "[DH]  - instigator: " << (void *)(args[3].l) << std::endl;
+	std::cout << "[DH]  - thisptr: " << (void *)obj << std::endl;
+	std::cout << "[DH]  - damage: " << damage << std::endl;
+	std::cout << "[DH]  - damageType obj: " << (void *)damageType << std::endl;
+	std::cout << "[DH]  - instigator obj: " << (void *)instigator << std::endl;
 
-	return jvalue { 0 };
+	return 0;
 }
 
-jvalue hkGetWalkSpeed(JNIEnv *jni, jmethodID callableMethod, jvalue *args, size_t nargs, void *arg)
+jfloat hkGetWalkSpeed(JNIEnv *jni, jobject obj)
 {
 	std::cout << "[DH] hkGetWalkSpeed called!" << std::endl;
-	std::cout << "[DH] Number of args: " << nargs << std::endl;
 	std::cout << "[DH] Args: " << std::endl;
-	std::cout << "[DH]  - thisptr: " << (void *)(args[0].l) << std::endl;
+	std::cout << "[DH]  - thisptr: " << (void *)obj << std::endl;
 
-	return jvalue { .f = 0.75f }; // Default speed is lower than this
+	return 0.75f; // Default speed is lower than this
 }
 
-jvalue hkGetAttackSpeedStatBoost(JNIEnv *jni, jmethodID callableMethod, jvalue *args, size_t nargs, void *arg)
+jfloat hkGetAttackSpeedStatBoost(JNIEnv *jni, jobject obj)
 {
 	std::cout << "[DH] hkGetAttackSpeedStatBoost called!" << std::endl;
-	std::cout << "[DH] Number of args: " << nargs << std::endl;
 	std::cout << "[DH] Args: " << std::endl;
-	std::cout << "[DH]  - thisptr: " << (void *)(args[0].l) << std::endl;
+	std::cout << "[DH]  - thisptr: " << (void *)obj << std::endl;
 
-	return jvalue { .f = 10.0f };
+	return 10.0f;
 }
 
 static void setup(JNIEnv *jni)
@@ -86,16 +83,16 @@ static void setup(JNIEnv *jni)
 	JNIHook_Init(jvm);
 	jint hkresult;
 
-	hkresult = JNIHook_Attach(AttackMethod, hkPlayerAttack, NULL);
+	hkresult = JNIHook_Attach(AttackMethod, (void *)hkPlayerAttack, &orig_AttackMethod);
 	std::cout << "[DH] Player::Attack Hook Result: " << hkresult << std::endl;
 
-	hkresult = JNIHook_Attach(takeDamageMethod, hkTakeDamage, NULL);
+	hkresult = JNIHook_Attach(takeDamageMethod, (void *)hkTakeDamage, &orig_takeDamageMethod);
 	std::cout << "[DH] Player::takeDamage Hook Result: " << hkresult << std::endl;
 
-	hkresult = JNIHook_Attach(getWalkSpeedMethod, hkGetWalkSpeed, NULL);
+	hkresult = JNIHook_Attach(getWalkSpeedMethod, (void *)hkGetWalkSpeed, &orig_getWalkSpeedMethod);
 	std::cout << "[DH] Player::getWalkSpeed Hook Result: " << hkresult << std::endl;
 
-	hkresult = JNIHook_Attach(getAttackSpeedStatBoostMethod, hkGetAttackSpeedStatBoost, NULL);
+	hkresult = JNIHook_Attach(getAttackSpeedStatBoostMethod, (void *)hkGetAttackSpeedStatBoost, &orig_getAttackSpeedStatBoostMethod);
 	std::cout << "[DH] Player::getWalkSpeed Hook Result: " << hkresult << std::endl;
 
 	std::cout << "[DH] Delver Hook set up successfully" << std::endl;
@@ -105,7 +102,8 @@ static void *main_thread(void *arg)
 {
 	JNIEnv *jni;
 
-	freopen("/tmp/delverhook.log", "w", stdout);
+	freopen("/tmp/delverhook.out", "w", stdout);
+	freopen("/tmp/delverhook.err", "w", stderr);
 
 	std::cout << "[DH] Library loaded!" << std::endl;
 
